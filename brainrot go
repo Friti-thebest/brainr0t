@@ -1,0 +1,224 @@
+-- Cabeçalho e serviços
+local player = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local uis = game:GetService("UserInputService")
+local ts = game:GetService("TeleportService")
+local http = game:GetService("HttpService")
+local runService = game:GetService("RunService")
+
+-- Variáveis
+local running = true
+local minimized = false
+local noclipEnabled = false
+local superJumpEnabled = false
+local espEnabled = false
+local roubarEnabled = false
+local roubarPlataforma = nil
+local voandoRoubo = false
+local espParts = {}
+local goEnabled = false
+
+-- Carrega a Mercury Library
+local Mercury = loadstring(game:HttpGet("https://raw.githubusercontent.com/deeeity/mercury-lib/master/src.lua"))()
+
+-- Cria a janela principal
+local GUI = Mercury:Create{
+    Name = "FRITISCRIPTS",
+    Size = UDim2.fromOffset(450, 300), -- Tamanho aumentado em 1.5x (300 * 1.5 = 450, 200 * 1.5 = 300)
+    Theme = Mercury.Themes.Dark,
+    Link = "https://github.com/deeeity/mercury-lib"
+}
+
+-- Cria a aba principal
+local MainTab = GUI:Tab{
+    Name = "Principal",
+    Icon = "rbxassetid://4483345998"
+}
+
+-- Botões e Toggles
+MainTab:Toggle{
+    Name = "Noclip",
+    StartingState = false,
+    Description = "Ativa/Desativa atravessar paredes",
+    Callback = function(state)
+        noclipEnabled = state
+    end
+}
+
+MainTab:Toggle{
+    Name = "Super Jump",
+    StartingState = false,
+    Description = "Ativa/Desativa pulo alto",
+    Callback = function(state)
+        superJumpEnabled = state
+    end
+}
+
+MainTab:Button{
+    Name = "Down",
+    Description = "Desce 10 blocos",
+    Callback = function()
+        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then 
+            hrp.CFrame = hrp.CFrame - Vector3.new(0,10,0) 
+        end
+    end
+}
+
+MainTab:Toggle{
+    Name = "ESP",
+    StartingState = false,
+    Description = "Veja outros jogadores",
+    Callback = function(state)
+        espEnabled = state
+        if not espEnabled then
+            for _, part in pairs(espParts) do 
+                pcall(function() part:Destroy() end)
+            end
+            espParts = {}
+        end
+    end
+}
+
+MainTab:Toggle{
+    Name = "Roubar",
+    StartingState = false,
+    Description = "Cria plataforma e permite voar até ela",
+    Callback = function(state)
+        roubarEnabled = state
+        if roubarEnabled then
+            if roubarPlataforma then 
+                pcall(function() roubarPlataforma:Destroy() end)
+            end
+            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                roubarPlataforma = Instance.new("Part")
+                roubarPlataforma.Size = Vector3.new(10,1,10)
+                roubarPlataforma.Anchored = true
+                roubarPlataforma.Position = hrp.Position - Vector3.new(0, 3, 0)
+                roubarPlataforma.BrickColor = BrickColor.new("Bright red")
+                roubarPlataforma.Parent = workspace
+            end
+        else
+            if roubarPlataforma then
+                pcall(function() roubarPlataforma:Destroy() end)
+                roubarPlataforma = nil
+            end
+        end
+    end
+}
+
+MainTab:Toggle{
+    Name = "Go",
+    StartingState = false,
+    Description = "Voa/plana automaticamente para o jogador mais próximo",
+    Callback = function(state)
+        goEnabled = state
+    end
+}
+
+-- Teclado
+uis.InputBegan:Connect(function(input, gameProcessed)
+    if not running or gameProcessed then return end
+
+    if input.KeyCode == Enum.KeyCode.Space and superJumpEnabled then
+        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then 
+            hrp.Velocity = Vector3.new(0, 120, 0) 
+        end
+    end
+
+    if input.KeyCode == Enum.KeyCode.F and roubarEnabled and roubarPlataforma then
+        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            -- Inicia o voo direto para a plataforma
+            voandoRoubo = true
+        end
+    end
+end)
+
+-- Função para encontrar o jogador mais próximo
+local function encontrarJogadorProximo()
+    local jogadorMaisProximo = nil
+    local menorDistancia = math.huge
+    
+    for _, p in ipairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local distancia = (p.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+            if distancia < menorDistancia then
+                menorDistancia = distancia
+                jogadorMaisProximo = p
+            end
+        end
+    end
+    
+    return jogadorMaisProximo
+end
+
+-- Loop de execução
+runService.RenderStepped:Connect(function()
+    if not running then return end
+
+    if noclipEnabled and player.Character then
+        for _, part in ipairs(player.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+
+    if espEnabled then
+        for _, p in ipairs(game.Players:GetPlayers()) do
+            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and not espParts[p.Name] then
+                local box = Instance.new("BoxHandleAdornment")
+                box.Size = Vector3.new(6, 6, 6)
+                box.Color3 = Color3.new(1, 0, 0)
+                box.AlwaysOnTop = true
+                box.ZIndex = 10
+                box.Adornee = p.Character.HumanoidRootPart
+                box.Transparency = 0.3
+                box.Name = "ESPBox"
+                box.Parent = p.Character.HumanoidRootPart
+                espParts[p.Name] = box
+            end
+        end
+    end
+
+    if voandoRoubo and roubarPlataforma and player.Character then
+        local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local targetPosition = roubarPlataforma.Position + Vector3.new(0, 3, 0)
+            local dir = (targetPosition - hrp.Position)
+            
+            if dir.Magnitude < 3 then
+                -- Chegou na plataforma
+                hrp.Velocity = Vector3.zero
+                voandoRoubo = false
+            else
+                -- Plana suavemente em direção à plataforma
+                local velocidadeHorizontal = dir.Unit * 20
+                local velocidadeVertical = Vector3.new(0, 0, 0)
+                hrp.Velocity = (velocidadeHorizontal + velocidadeVertical) * 2.05
+            end
+        end
+    end
+
+    if goEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local alvoProximo = encontrarJogadorProximo()
+        if alvoProximo then
+            local hrp = player.Character.HumanoidRootPart
+            local targetPosition = alvoProximo.Character.HumanoidRootPart.Position -- Remove o offset de altura para ficar na mesma altura
+            local dir = (targetPosition - hrp.Position)
+            
+            -- Plana/voa em direção ao alvo
+            local velocidadeHorizontal = dir.Unit * 25 -- Velocidade horizontal um pouco maior
+            local velocidadeVertical = Vector3.new(0, 0, 0)
+            hrp.Velocity = (velocidadeHorizontal + velocidadeVertical) * 2.05
+        end
+    end
+end)
+
+-- Função para destruir a UI quando necessário
+local function Destroy()
+    GUI:Destroy()
+end 
