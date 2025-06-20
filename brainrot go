@@ -17,6 +17,7 @@ local roubarPlataforma = nil
 local voandoRoubo = false
 local espParts = {}
 local goEnabled = false
+local shiftlockEnabled = false
 
 -- Carrega a Mercury Library
 local Mercury = loadstring(game:HttpGet("https://raw.githubusercontent.com/deeeity/mercury-lib/master/src.lua"))()
@@ -81,7 +82,7 @@ MainTab:Toggle{
 }
 
 MainTab:Toggle{
-    Name = "Roubar",
+    Name = "Roubar (Steal)",
     StartingState = false,
     Description = "Cria plataforma e permite voar até ela",
     Callback = function(state)
@@ -108,6 +109,58 @@ MainTab:Toggle{
     end
 }
 
+-- Adiciona o novo botão "."
+MainTab:Button{
+    Name = "Steal2",
+    Description = "Voa/plana para a plataforma",
+    Callback = function()
+        if roubarEnabled and roubarPlataforma then
+            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                -- Inicia o voo direto para a plataforma
+                voandoRoubo = true
+            end
+        end
+    end
+}
+
+MainTab:Toggle{
+    Name = "SHIFTLOCK",
+    StartingState = false,
+    Description = "Trava a câmera como o Shift do teclado",
+    Callback = function(state)
+        shiftlockEnabled = state
+        
+        -- Obtém o Humanoid e PlayerModule
+        local character = player.Character
+        if not character then return end
+        
+        local humanoid = character:FindFirstChild("Humanoid")
+        if not humanoid then return end
+        
+        -- Ativa/Desativa o ShiftLock
+        if shiftlockEnabled then
+            -- Ativa o ShiftLock
+            humanoid.CameraOffset = Vector3.new(2, 0, 0) -- Move a câmera para o lado direito
+            if player.PlayerScripts:FindFirstChild("PlayerModule") then
+                local playerModule = require(player.PlayerScripts.PlayerModule)
+                if playerModule then
+                    playerModule:GetControls():Enable(Enum.ControlMode.MouseLockSwitch)
+                end
+            end
+        else
+            -- Desativa o ShiftLock
+            humanoid.CameraOffset = Vector3.new(0, 0, 0) -- Retorna a câmera para posição normal
+            if player.PlayerScripts:FindFirstChild("PlayerModule") then
+                local playerModule = require(player.PlayerScripts.PlayerModule)
+                if playerModule then
+                    playerModule:GetControls():Enable(Enum.ControlMode.Classic)
+                end
+            end
+        end
+    end
+}
+
 MainTab:Toggle{
     Name = "Go",
     StartingState = false,
@@ -125,14 +178,6 @@ uis.InputBegan:Connect(function(input, gameProcessed)
         local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
         if hrp then 
             hrp.Velocity = Vector3.new(0, 120, 0) 
-        end
-    end
-
-    if input.KeyCode == Enum.KeyCode.F and roubarEnabled and roubarPlataforma then
-        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            -- Inicia o voo direto para a plataforma
-            voandoRoubo = true
         end
     end
 end)
