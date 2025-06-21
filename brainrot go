@@ -149,7 +149,11 @@ local GUI = OrionLib:MakeWindow({
     Name = "FRITISCRIPTS",
     Size = interfaceSize,
     Theme = OrionLib.Themes.Dark,
-    Link = "https://github.com/shlexware/Orion"
+    Link = "https://github.com/shlexware/Orion",
+    HidePremium = true,
+    SaveConfig = true,
+    ConfigFolder = "FritiScripts",
+    IntroEnabled = false
 })
 
 -- Função para ajustar elementos da GUI após a criação
@@ -214,6 +218,8 @@ local MovementSection = MainTab:AddSection({
 MovementSection:AddToggle({
     Name = "Noclip",
     Default = false,
+    Flag = "noclipToggle",
+    Save = true,
     Callback = function(Value)
         noclipEnabled = Value
     end    
@@ -223,6 +229,8 @@ MovementSection:AddToggle({
 MovementSection:AddToggle({
     Name = "Super Jump",
     Default = false,
+    Flag = "jumpToggle",
+    Save = true,
     Callback = function(Value)
         superJumpEnabled = Value
     end    
@@ -232,6 +240,8 @@ MovementSection:AddToggle({
 MovementSection:AddToggle({
     Name = "SHIFTLOCK",
     Default = false,
+    Flag = "shiftlockToggle",
+    Save = true,
     Callback = function(Value)
         shiftlockEnabled = Value
         if Value then
@@ -251,6 +261,8 @@ local PlayerSection = MainTab:AddSection({
 PlayerSection:AddToggle({
     Name = "ESP",
     Default = false,
+    Flag = "espToggle",
+    Save = true,
     Callback = function(Value)
         espEnabled = Value
         if not Value then
@@ -269,6 +281,8 @@ PlayerSection:AddToggle({
 PlayerSection:AddToggle({
     Name = "Roubar (Steal)",
     Default = false,
+    Flag = "roubarToggle",
+    Save = true,
     Callback = function(Value)
         roubarEnabled = Value
         if not Value then
@@ -436,4 +450,28 @@ end)
 -- Função para destruir a UI quando necessário
 local function Destroy()
     GUI:Destroy()
+end
+
+-- Notificação inicial com delay para garantir que apareça
+spawn(function()
+    wait(1)
+    OrionLib:MakeNotification({
+        Name = "FRITISCRIPTS",
+        Content = "Script carregado com sucesso!" .. (isMobile and " (Versão Mobile)" or ""),
+        Image = "rbxassetid://4483345998",
+        Time = 5
+    })
+end)
+
+-- Força a interface a ser visível em dispositivos móveis
+if isMobile then
+    spawn(function()
+        wait(2)
+        for _, gui in pairs(game:GetService("CoreGui"):GetChildren()) do
+            if gui.Name == "Orion" then
+                gui.Enabled = true
+                gui.ResetOnSpawn = false
+            end
+        end
+    end)
 end 
