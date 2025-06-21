@@ -22,10 +22,21 @@ local shiftlockEnabled = false
 -- Carrega a Mercury Library
 local Mercury = loadstring(game:HttpGet("https://raw.githubusercontent.com/deeeity/mercury-lib/master/src.lua"))()
 
+-- Detecta se é dispositivo móvel
+local isMobile = game:GetService("UserInputService").TouchEnabled
+
+-- Define o tamanho da interface baseado no dispositivo
+local interfaceSize
+if isMobile then
+    interfaceSize = UDim2.fromOffset(225, 150) -- Tamanho para mobile (450/2, 300/2)
+else
+    interfaceSize = UDim2.fromOffset(450, 300) -- Tamanho normal para PC
+end
+
 -- Cria a janela principal
 local GUI = Mercury:Create{
     Name = "FRITISCRIPTS",
-    Size = UDim2.fromOffset(450, 300), -- Tamanho aumentado em 1.5x (300 * 1.5 = 450, 200 * 1.5 = 300)
+    Size = interfaceSize,
     Theme = Mercury.Themes.Dark,
     Link = "https://github.com/deeeity/mercury-lib"
 }
