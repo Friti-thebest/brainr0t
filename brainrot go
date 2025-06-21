@@ -41,6 +41,65 @@ local GUI = Mercury:Create{
     Link = "https://github.com/deeeity/mercury-lib"
 }
 
+-- Adiciona botão de minimizar
+local function adicionarBotaoMinimizar()
+    -- Espera a GUI carregar
+    task.wait(0.1)
+    
+    -- Encontra o frame principal
+    local mainFrame = game:GetService("CoreGui"):FindFirstChild("Mercury"):FindFirstChild("Main")
+    if not mainFrame then return end
+    
+    -- Cria o botão de minimizar
+    local minimizeBtn = Instance.new("TextButton")
+    minimizeBtn.Name = "MinimizeButton"
+    minimizeBtn.Text = "-"
+    minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minimizeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
+    minimizeBtn.Position = UDim2.new(1, -60, 0, 0) -- Posiciona ao lado do X
+    minimizeBtn.Font = Enum.Font.SourceSansBold
+    minimizeBtn.TextSize = 20
+    minimizeBtn.Parent = mainFrame
+    minimizeBtn.AutoButtonColor = false
+    
+    -- Variável para controlar estado minimizado
+    local minimized = false
+    local originalSize = mainFrame.Size
+    
+    -- Função de minimizar/maximizar
+    minimizeBtn.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        if minimized then
+            mainFrame.Size = UDim2.new(0, mainFrame.Size.X.Offset, 0, 30)
+            -- Esconde todos os elementos exceto a barra de título
+            for _, child in pairs(mainFrame:GetChildren()) do
+                if child.Name ~= "MinimizeButton" and child.Name ~= "TopBar" then
+                    child.Visible = false
+                end
+            end
+        else
+            mainFrame.Size = originalSize
+            -- Mostra todos os elementos
+            for _, child in pairs(mainFrame:GetChildren()) do
+                child.Visible = true
+            end
+        end
+    end)
+    
+    -- Efeitos visuais do botão
+    minimizeBtn.MouseEnter:Connect(function()
+        minimizeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    end)
+    
+    minimizeBtn.MouseLeave:Connect(function()
+        minimizeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    end)
+end
+
+-- Chama a função para adicionar o botão
+adicionarBotaoMinimizar()
+
 -- Cria a aba principal
 local MainTab = GUI:Tab{
     Name = "Principal",
