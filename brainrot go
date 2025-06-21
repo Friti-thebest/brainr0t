@@ -39,8 +39,8 @@ else
     elementScale = 1
 end
 
--- Carrega a Mercury Library
-local Mercury = loadstring(game:HttpGet("https://raw.githubusercontent.com/deeeity/mercury-lib/master/src.lua"))()
+-- Carrega a Orion Library
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
 -- Função para adicionar o botão de minimizar
 local function adicionarBotaoMinimizar()
@@ -145,12 +145,12 @@ local function adicionarBotaoMinimizar()
 end
 
 -- Cria a janela principal com configurações específicas para mobile
-local GUI = Mercury:Create{
+local GUI = OrionLib:MakeWindow({
     Name = "FRITISCRIPTS",
     Size = interfaceSize,
-    Theme = Mercury.Themes.Dark,
-    Link = "https://github.com/deeeity/mercury-lib"
-}
+    Theme = OrionLib.Themes.Dark,
+    Link = "https://github.com/shlexware/Orion"
+})
 
 -- Função para ajustar elementos da GUI após a criação
 local function ajustarElementosGUI()
@@ -199,144 +199,146 @@ adicionarBotaoMinimizar()
 ajustarElementosGUI()
 
 -- Cria a aba principal
-local MainTab = GUI:Tab{
+local MainTab = GUI:MakeTab({
     Name = "Principal",
-    Icon = "rbxassetid://4483345998"
-}
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
--- Botões e Toggles
-MainTab:Toggle{
+-- Seção de Movimentação
+local MovementSection = MainTab:AddSection({
+    Name = "Movimentação"
+})
+
+-- Toggle para Noclip
+MovementSection:AddToggle({
     Name = "Noclip",
-    StartingState = false,
-    Description = "Ativa/Desativa atravessar paredes",
-    Callback = function(state)
-        noclipEnabled = state
-    end
-}
+    Default = false,
+    Callback = function(Value)
+        noclipEnabled = Value
+    end    
+})
 
-MainTab:Toggle{
+-- Toggle para Super Jump
+MovementSection:AddToggle({
     Name = "Super Jump",
-    StartingState = false,
-    Description = "Ativa/Desativa pulo alto",
-    Callback = function(state)
-        superJumpEnabled = state
-    end
-}
+    Default = false,
+    Callback = function(Value)
+        superJumpEnabled = Value
+    end    
+})
 
-MainTab:Button{
-    Name = "Down",
-    Description = "Desce 10 blocos",
-    Callback = function()
-        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then 
-            hrp.CFrame = hrp.CFrame - Vector3.new(0,10,0) 
+-- Toggle para ShiftLock
+MovementSection:AddToggle({
+    Name = "SHIFTLOCK",
+    Default = false,
+    Callback = function(Value)
+        shiftlockEnabled = Value
+        if Value then
+            game:GetService("Players").LocalPlayer.DevEnableMouseLock = true
+        else
+            game:GetService("Players").LocalPlayer.DevEnableMouseLock = false
         end
-    end
-}
+    end    
+})
 
-MainTab:Toggle{
+-- Seção de Jogador
+local PlayerSection = MainTab:AddSection({
+    Name = "Jogador"
+})
+
+-- Toggle para ESP
+PlayerSection:AddToggle({
     Name = "ESP",
-    StartingState = false,
-    Description = "Veja outros jogadores",
-    Callback = function(state)
-        espEnabled = state
-        if not espEnabled then
-            for _, part in pairs(espParts) do 
-                pcall(function() part:Destroy() end)
+    Default = false,
+    Callback = function(Value)
+        espEnabled = Value
+        if not Value then
+            -- Remove ESP existente
+            for _, part in pairs(espParts) do
+                if part and part.Parent then
+                    part:Destroy()
+                end
             end
             espParts = {}
         end
-    end
-}
+    end    
+})
 
-MainTab:Toggle{
+-- Toggle para Roubar (Steal)
+PlayerSection:AddToggle({
     Name = "Roubar (Steal)",
-    StartingState = false,
-    Description = "Cria plataforma e permite voar até ela",
-    Callback = function(state)
-        roubarEnabled = state
-        if roubarEnabled then
-            if roubarPlataforma then 
-                pcall(function() roubarPlataforma:Destroy() end)
-            end
-            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                roubarPlataforma = Instance.new("Part")
-                roubarPlataforma.Size = Vector3.new(10,1,10)
-                roubarPlataforma.Anchored = true
-                roubarPlataforma.Position = hrp.Position - Vector3.new(0, 3, 0)
-                roubarPlataforma.BrickColor = BrickColor.new("Bright red")
-                roubarPlataforma.Parent = workspace
-            end
-        else
-            if roubarPlataforma then
-                pcall(function() roubarPlataforma:Destroy() end)
+    Default = false,
+    Callback = function(Value)
+        roubarEnabled = Value
+        if not Value then
+            if roubarPlataforma and roubarPlataforma.Parent then
+                roubarPlataforma:Destroy()
                 roubarPlataforma = nil
             end
+            voandoRoubo = false
         end
-    end
-}
+    end    
+})
 
--- Adiciona o novo botão "."
-MainTab:Button{
+-- Botão para Steal2
+PlayerSection:AddButton({
     Name = "Steal2",
-    Description = "Voa/plana para a plataforma",
     Callback = function()
-        if roubarEnabled and roubarPlataforma then
-            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                -- Inicia o voo direto para a plataforma
-                voandoRoubo = true
-            end
-        end
-    end
-}
-
-MainTab:Toggle{
-    Name = "SHIFTLOCK",
-    StartingState = false,
-    Description = "Trava a câmera como o Shift do teclado",
-    Callback = function(state)
-        shiftlockEnabled = state
+        -- Implementação do Steal2 aqui
+        local nearestPlayer = nil
+        local shortestDistance = math.huge
         
-        -- Obtém o Humanoid e PlayerModule
-        local character = player.Character
-        if not character then return end
-        
-        local humanoid = character:FindFirstChild("Humanoid")
-        if not humanoid then return end
-        
-        -- Ativa/Desativa o ShiftLock
-        if shiftlockEnabled then
-            -- Ativa o ShiftLock
-            humanoid.CameraOffset = Vector3.new(2, 0, 0) -- Move a câmera para o lado direito
-            if player.PlayerScripts:FindFirstChild("PlayerModule") then
-                local playerModule = require(player.PlayerScripts.PlayerModule)
-                if playerModule then
-                    playerModule:GetControls():Enable(Enum.ControlMode.MouseLockSwitch)
-                end
-            end
-        else
-            -- Desativa o ShiftLock
-            humanoid.CameraOffset = Vector3.new(0, 0, 0) -- Retorna a câmera para posição normal
-            if player.PlayerScripts:FindFirstChild("PlayerModule") then
-                local playerModule = require(player.PlayerScripts.PlayerModule)
-                if playerModule then
-                    playerModule:GetControls():Enable(Enum.ControlMode.Classic)
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local distance = (p.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    nearestPlayer = p
                 end
             end
         end
-    end
-}
+        
+        if nearestPlayer then
+            player.Character.HumanoidRootPart.CFrame = nearestPlayer.Character.HumanoidRootPart.CFrame
+        end
+    end    
+})
 
-MainTab:Toggle{
+-- Botão para Go
+PlayerSection:AddButton({
     Name = "Go",
-    StartingState = false,
-    Description = "Voa/plana automaticamente para o jogador mais próximo",
-    Callback = function(state)
-        goEnabled = state
-    end
-}
+    Callback = function()
+        -- Implementação do Go aqui
+        local nearestPlayer = nil
+        local shortestDistance = math.huge
+        
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local distance = (p.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    nearestPlayer = p
+                end
+            end
+        end
+        
+        if nearestPlayer then
+            local targetPos = nearestPlayer.Character.HumanoidRootPart.Position
+            local direction = (targetPos - player.Character.HumanoidRootPart.Position).Unit
+            local distance = (targetPos - player.Character.HumanoidRootPart.Position).Magnitude
+            local speed = 2.05 -- Velocidade ajustada
+            
+            for i = 1, distance, speed do
+                if not running then break end
+                player.Character.HumanoidRootPart.CFrame = CFrame.new(
+                    player.Character.HumanoidRootPart.Position + direction * speed
+                )
+                wait()
+            end
+        end
+    end    
+})
 
 -- Teclado
 uis.InputBegan:Connect(function(input, gameProcessed)
