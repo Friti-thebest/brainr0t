@@ -28,7 +28,7 @@ local isMobile = game:GetService("UserInputService").TouchEnabled
 -- Define o tamanho da interface baseado no dispositivo
 local interfaceSize
 if isMobile then
-    interfaceSize = UDim2.fromOffset(225, 150) -- Tamanho para mobile (450/2, 300/2)
+    interfaceSize = UDim2.fromOffset(150, 100) -- Reduzido para aproximadamente 1/3 do tamanho original (era 225x150)
 else
     interfaceSize = UDim2.fromOffset(450, 300) -- Tamanho normal para PC
 end
@@ -41,63 +41,76 @@ local GUI = Mercury:Create{
     Link = "https://github.com/deeeity/mercury-lib"
 }
 
--- Adiciona botão de minimizar
+-- Função para adicionar o botão de minimizar
 local function adicionarBotaoMinimizar()
-    -- Espera a GUI carregar
-    task.wait(0.1)
-    
-    -- Encontra o frame principal
-    local mainFrame = game:GetService("CoreGui"):FindFirstChild("Mercury"):FindFirstChild("Main")
-    if not mainFrame then return end
-    
-    -- Cria o botão de minimizar
-    local minimizeBtn = Instance.new("TextButton")
-    minimizeBtn.Name = "MinimizeButton"
-    minimizeBtn.Text = "-"
-    minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    minimizeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
-    minimizeBtn.Position = UDim2.new(1, -60, 0, 0) -- Posiciona ao lado do X
-    minimizeBtn.Font = Enum.Font.SourceSansBold
-    minimizeBtn.TextSize = 20
-    minimizeBtn.Parent = mainFrame
-    minimizeBtn.AutoButtonColor = false
-    
-    -- Variável para controlar estado minimizado
-    local minimized = false
-    local originalSize = mainFrame.Size
-    
-    -- Função de minimizar/maximizar
-    minimizeBtn.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        if minimized then
-            mainFrame.Size = UDim2.new(0, mainFrame.Size.X.Offset, 0, 30)
-            -- Esconde todos os elementos exceto a barra de título
-            for _, child in pairs(mainFrame:GetChildren()) do
-                if child.Name ~= "MinimizeButton" and child.Name ~= "TopBar" then
-                    child.Visible = false
+    spawn(function()
+        -- Espera um pouco mais para garantir que a GUI carregou completamente
+        wait(0.5)
+        
+        -- Procura a GUI do Mercury
+        local mercuryGui = game:GetService("CoreGui"):WaitForChild("Mercury", 10)
+        if not mercuryGui then return end
+        
+        local main = mercuryGui:WaitForChild("Main", 10)
+        if not main then return end
+        
+        local topBar = main:WaitForChild("TopBar", 10)
+        if not topBar then return end
+        
+        -- Remove o botão anterior se existir
+        local existingBtn = topBar:FindFirstChild("MinimizeButton")
+        if existingBtn then
+            existingBtn:Destroy()
+        end
+        
+        -- Cria o novo botão de minimizar
+        local minimizeBtn = Instance.new("TextButton")
+        minimizeBtn.Name = "MinimizeButton"
+        minimizeBtn.Text = "-"
+        minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        minimizeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        minimizeBtn.BorderSizePixel = 0
+        minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
+        minimizeBtn.Position = UDim2.new(1, -60, 0, 0)
+        minimizeBtn.Font = Enum.Font.SourceSansBold
+        minimizeBtn.TextSize = 20
+        minimizeBtn.ZIndex = 10
+        minimizeBtn.Parent = topBar
+        
+        -- Variável para controlar estado minimizado
+        local minimized = false
+        local originalSize = main.Size
+        
+        -- Função de minimizar/maximizar
+        minimizeBtn.MouseButton1Click:Connect(function()
+            minimized = not minimized
+            if minimized then
+                main.Size = UDim2.new(0, main.Size.X.Offset, 0, 30)
+                for _, child in pairs(main:GetChildren()) do
+                    if child.Name ~= "TopBar" then
+                        child.Visible = false
+                    end
+                end
+            else
+                main.Size = originalSize
+                for _, child in pairs(main:GetChildren()) do
+                    child.Visible = true
                 end
             end
-        else
-            mainFrame.Size = originalSize
-            -- Mostra todos os elementos
-            for _, child in pairs(mainFrame:GetChildren()) do
-                child.Visible = true
-            end
-        end
-    end)
-    
-    -- Efeitos visuais do botão
-    minimizeBtn.MouseEnter:Connect(function()
-        minimizeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    end)
-    
-    minimizeBtn.MouseLeave:Connect(function()
-        minimizeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        end)
+        
+        -- Efeitos visuais do botão
+        minimizeBtn.MouseEnter:Connect(function()
+            minimizeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        end)
+        
+        minimizeBtn.MouseLeave:Connect(function()
+            minimizeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        end)
     end)
 end
 
--- Chama a função para adicionar o botão
+-- Chama a função para adicionar o botão após criar a GUI
 adicionarBotaoMinimizar()
 
 -- Cria a aba principal
