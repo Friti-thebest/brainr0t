@@ -39,320 +39,116 @@ else
     elementScale = 1
 end
 
--- Carrega a Orion Library
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+-- Carrega a Kavo UI Library
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 
--- Função para adicionar o botão de minimizar
-local function adicionarBotaoMinimizar()
-    spawn(function()
-        wait(0.5)
-        
-        local mercuryGui = game:GetService("CoreGui"):WaitForChild("Mercury", 10)
-        if not mercuryGui then return end
-        
-        local main = mercuryGui:WaitForChild("Main", 10)
-        if not main then return end
-        
-        local topBar = main:WaitForChild("TopBar", 10)
-        if not topBar then return end
-        
-        -- Ajusta o tamanho da fonte e escala de todos os elementos na GUI
-        local function ajustarElementos(parent)
-            for _, obj in pairs(parent:GetDescendants()) do
-                if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
-                    obj.TextSize = textSize
-                    
-                    -- Ajusta o tamanho do elemento se tiver Size definido
-                    if obj.Size.X.Scale > 0 or obj.Size.Y.Scale > 0 then
-                        local newSize = UDim2.new(
-                            obj.Size.X.Scale * elementScale,
-                            obj.Size.X.Offset * elementScale,
-                            obj.Size.Y.Scale * elementScale,
-                            obj.Size.Y.Offset * elementScale
-                        )
-                        obj.Size = newSize
-                    end
-                end
-                
-                -- Ajusta posição para elementos que usam posicionamento absoluto
-                if obj:IsA("GuiObject") and (obj.Position.X.Scale > 0 or obj.Position.Y.Scale > 0) then
-                    local newPosition = UDim2.new(
-                        obj.Position.X.Scale,
-                        obj.Position.X.Offset * elementScale,
-                        obj.Position.Y.Scale,
-                        obj.Position.Y.Offset * elementScale
-                    )
-                    obj.Position = newPosition
-                end
-            end
-        end
-        
-        -- Remove o botão anterior se existir
-        local existingBtn = topBar:FindFirstChild("MinimizeButton")
-        if existingBtn then
-            existingBtn:Destroy()
-        end
-        
-        -- Cria o novo botão de minimizar
-        local minimizeBtn = Instance.new("TextButton")
-        minimizeBtn.Name = "MinimizeButton"
-        minimizeBtn.Text = "-"
-        minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        minimizeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        minimizeBtn.BorderSizePixel = 0
-        minimizeBtn.Size = buttonSize
-        minimizeBtn.Position = UDim2.new(1, isMobile and -40 or -60, 0, 0)
-        minimizeBtn.Font = Enum.Font.SourceSansBold
-        minimizeBtn.TextSize = textSize
-        minimizeBtn.ZIndex = 10
-        minimizeBtn.Parent = topBar
-        
-        -- Variável para controlar estado minimizado
-        local minimized = false
-        local originalSize = main.Size
-        
-        -- Função de minimizar/maximizar
-        minimizeBtn.MouseButton1Click:Connect(function()
-            minimized = not minimized
-            if minimized then
-                main.Size = UDim2.new(0, main.Size.X.Offset, 0, isMobile and 15 or 30)
-                for _, child in pairs(main:GetChildren()) do
-                    if child.Name ~= "TopBar" then
-                        child.Visible = false
-                    end
-                end
-            else
-                main.Size = originalSize
-                for _, child in pairs(main:GetChildren()) do
-                    child.Visible = true
-                end
-            end
-        end)
-        
-        -- Efeitos visuais do botão
-        minimizeBtn.MouseEnter:Connect(function()
-            minimizeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        end)
-        
-        minimizeBtn.MouseLeave:Connect(function()
-            minimizeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        end)
-        
-        -- Aplica os ajustes após um pequeno delay
-        wait(0.1)
-        ajustarElementos(mercuryGui)
-    end)
-end
+-- Cria a janela principal
+local Window = Library.CreateLib("FRITISCRIPTS", "DarkTheme")
 
--- Cria a janela principal com configurações específicas para mobile
-local GUI = OrionLib:MakeWindow({
-    Name = "FRITISCRIPTS",
-    Size = interfaceSize,
-    Theme = OrionLib.Themes.Dark,
-    Link = "https://github.com/shlexware/Orion",
-    HidePremium = true,
-    SaveConfig = true,
-    ConfigFolder = "FritiScripts",
-    IntroEnabled = false
-})
+-- Força a interface a ser visível em dispositivos móveis
+game:GetService("StarterGui"):SetCore("TouchCameraMovementMode", "UserChoice")
+game:GetService("StarterGui"):SetCore("DevConsoleVisible", false)
 
--- Função para ajustar elementos da GUI após a criação
-local function ajustarElementosGUI()
-    spawn(function()
-        wait(1)
-        
-        local mercuryGui = game:GetService("CoreGui"):WaitForChild("Mercury", 10)
-        if not mercuryGui then return end
-        
-        -- Função recursiva para ajustar todos os elementos
-        local function ajustarTodosElementos(parent)
-            for _, obj in pairs(parent:GetDescendants()) do
-                if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
-                    obj.TextSize = textSize
-                    
-                    -- Ajusta tamanho de botões e elementos
-                    if obj:IsA("GuiObject") then
-                        if obj.Size.Y.Offset > 15 then
-                            local newSize = UDim2.new(
-                                obj.Size.X.Scale * elementScale,
-                                obj.Size.X.Offset * elementScale,
-                                obj.Size.Y.Scale * elementScale,
-                                obj.Size.Y.Offset * elementScale
-                            )
-                            obj.Size = newSize
-                        end
-                    end
-                end
-                
-                -- Ajusta padding e outros elementos de UI
-                if obj:IsA("UIPadding") then
-                    obj.PaddingTop = UDim.new(0, isMobile and 2 or 5)
-                    obj.PaddingBottom = UDim.new(0, isMobile and 2 or 5)
-                    obj.PaddingLeft = UDim.new(0, isMobile and 2 or 5)
-                    obj.PaddingRight = UDim.new(0, isMobile and 2 or 5)
-                end
-            end
-        end
-        
-        ajustarTodosElementos(mercuryGui)
-    end)
-end
-
--- Chama as funções de ajuste
-adicionarBotaoMinimizar()
-ajustarElementosGUI()
-
--- Cria a aba principal
-local MainTab = GUI:MakeTab({
-    Name = "Principal",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
--- Seção de Movimentação
-local MovementSection = MainTab:AddSection({
-    Name = "Movimentação"
-})
+-- Cria as abas
+local MainTab = Window:NewTab("Principal")
+local MovementSection = MainTab:NewSection("Movimentação")
+local PlayerSection = MainTab:NewSection("Jogador")
 
 -- Toggle para Noclip
-MovementSection:AddToggle({
-    Name = "Noclip",
-    Default = false,
-    Flag = "noclipToggle",
-    Save = true,
-    Callback = function(Value)
-        noclipEnabled = Value
-    end    
-})
+MovementSection:NewToggle("Noclip", "Atravessa paredes", function(state)
+    noclipEnabled = state
+end)
 
 -- Toggle para Super Jump
-MovementSection:AddToggle({
-    Name = "Super Jump",
-    Default = false,
-    Flag = "jumpToggle",
-    Save = true,
-    Callback = function(Value)
-        superJumpEnabled = Value
-    end    
-})
+MovementSection:NewToggle("Super Jump", "Pulo alto", function(state)
+    superJumpEnabled = state
+end)
 
 -- Toggle para ShiftLock
-MovementSection:AddToggle({
-    Name = "SHIFTLOCK",
-    Default = false,
-    Flag = "shiftlockToggle",
-    Save = true,
-    Callback = function(Value)
-        shiftlockEnabled = Value
-        if Value then
-            game:GetService("Players").LocalPlayer.DevEnableMouseLock = true
-        else
-            game:GetService("Players").LocalPlayer.DevEnableMouseLock = false
-        end
-    end    
-})
-
--- Seção de Jogador
-local PlayerSection = MainTab:AddSection({
-    Name = "Jogador"
-})
+MovementSection:NewToggle("SHIFTLOCK", "Trava a câmera", function(state)
+    shiftlockEnabled = state
+    if state then
+        game:GetService("Players").LocalPlayer.DevEnableMouseLock = true
+    else
+        game:GetService("Players").LocalPlayer.DevEnableMouseLock = false
+    end
+end)
 
 -- Toggle para ESP
-PlayerSection:AddToggle({
-    Name = "ESP",
-    Default = false,
-    Flag = "espToggle",
-    Save = true,
-    Callback = function(Value)
-        espEnabled = Value
-        if not Value then
-            -- Remove ESP existente
-            for _, part in pairs(espParts) do
-                if part and part.Parent then
-                    part:Destroy()
-                end
+PlayerSection:NewToggle("ESP", "Veja outros jogadores", function(state)
+    espEnabled = state
+    if not state then
+        for _, part in pairs(espParts) do
+            if part and part.Parent then
+                part:Destroy()
             end
-            espParts = {}
         end
-    end    
-})
+        espParts = {}
+    end
+end)
 
 -- Toggle para Roubar (Steal)
-PlayerSection:AddToggle({
-    Name = "Roubar (Steal)",
-    Default = false,
-    Flag = "roubarToggle",
-    Save = true,
-    Callback = function(Value)
-        roubarEnabled = Value
-        if not Value then
-            if roubarPlataforma and roubarPlataforma.Parent then
-                roubarPlataforma:Destroy()
-                roubarPlataforma = nil
-            end
-            voandoRoubo = false
+PlayerSection:NewToggle("Roubar (Steal)", "Plataforma e voo", function(state)
+    roubarEnabled = state
+    if not state then
+        if roubarPlataforma and roubarPlataforma.Parent then
+            roubarPlataforma:Destroy()
+            roubarPlataforma = nil
         end
-    end    
-})
+        voandoRoubo = false
+    end
+end)
 
 -- Botão para Steal2
-PlayerSection:AddButton({
-    Name = "Steal2",
-    Callback = function()
-        -- Implementação do Steal2 aqui
-        local nearestPlayer = nil
-        local shortestDistance = math.huge
-        
-        for _, p in pairs(game.Players:GetPlayers()) do
-            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                local distance = (p.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-                if distance < shortestDistance then
-                    shortestDistance = distance
-                    nearestPlayer = p
-                end
+PlayerSection:NewButton("Steal2", "Teleporta para o jogador mais próximo", function()
+    local nearestPlayer = nil
+    local shortestDistance = math.huge
+    
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local distance = (p.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+            if distance < shortestDistance then
+                shortestDistance = distance
+                nearestPlayer = p
             end
         end
-        
-        if nearestPlayer then
-            player.Character.HumanoidRootPart.CFrame = nearestPlayer.Character.HumanoidRootPart.CFrame
-        end
-    end    
-})
+    end
+    
+    if nearestPlayer then
+        player.Character.HumanoidRootPart.CFrame = nearestPlayer.Character.HumanoidRootPart.CFrame
+    end
+end)
 
 -- Botão para Go
-PlayerSection:AddButton({
-    Name = "Go",
-    Callback = function()
-        -- Implementação do Go aqui
-        local nearestPlayer = nil
-        local shortestDistance = math.huge
-        
-        for _, p in pairs(game.Players:GetPlayers()) do
-            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                local distance = (p.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-                if distance < shortestDistance then
-                    shortestDistance = distance
-                    nearestPlayer = p
-                end
+PlayerSection:NewButton("Go", "Voa até o jogador mais próximo", function()
+    local nearestPlayer = nil
+    local shortestDistance = math.huge
+    
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local distance = (p.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+            if distance < shortestDistance then
+                shortestDistance = distance
+                nearestPlayer = p
             end
         end
+    end
+    
+    if nearestPlayer then
+        local targetPos = nearestPlayer.Character.HumanoidRootPart.Position
+        local direction = (targetPos - player.Character.HumanoidRootPart.Position).Unit
+        local distance = (targetPos - player.Character.HumanoidRootPart.Position).Magnitude
+        local speed = 2.05
         
-        if nearestPlayer then
-            local targetPos = nearestPlayer.Character.HumanoidRootPart.Position
-            local direction = (targetPos - player.Character.HumanoidRootPart.Position).Unit
-            local distance = (targetPos - player.Character.HumanoidRootPart.Position).Magnitude
-            local speed = 2.05 -- Velocidade ajustada
-            
-            for i = 1, distance, speed do
-                if not running then break end
-                player.Character.HumanoidRootPart.CFrame = CFrame.new(
-                    player.Character.HumanoidRootPart.Position + direction * speed
-                )
-                wait()
-            end
+        for i = 1, distance, speed do
+            if not running then break end
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(
+                player.Character.HumanoidRootPart.Position + direction * speed
+            )
+            wait()
         end
-    end    
-})
+    end
+end)
 
 -- Teclado
 uis.InputBegan:Connect(function(input, gameProcessed)
@@ -449,29 +245,39 @@ end)
 
 -- Função para destruir a UI quando necessário
 local function Destroy()
-    GUI:Destroy()
+    Window:Destroy()
 end
 
 -- Notificação inicial com delay para garantir que apareça
 spawn(function()
     wait(1)
-    OrionLib:MakeNotification({
-        Name = "FRITISCRIPTS",
-        Content = "Script carregado com sucesso!" .. (isMobile and " (Versão Mobile)" or ""),
-        Image = "rbxassetid://4483345998",
-        Time = 5
-    })
-end)
-
--- Força a interface a ser visível em dispositivos móveis
-if isMobile then
-    spawn(function()
-        wait(2)
-        for _, gui in pairs(game:GetService("CoreGui"):GetChildren()) do
-            if gui.Name == "Orion" then
-                gui.Enabled = true
-                gui.ResetOnSpawn = false
+    for _, gui in pairs(game:GetService("CoreGui"):GetChildren()) do
+        if gui.Name == "KavoUI" then
+            gui.Enabled = true
+            gui.ResetOnSpawn = false
+            -- Ajusta o tamanho para mobile se necessário
+            if isMobile then
+                if gui:FindFirstChild("Main") then
+                    gui.Main.Size = UDim2.new(0, 300, 0, 400)
+                end
             end
         end
-    end)
-end 
+    end
+end)
+
+-- Força a interface a ser visível após um pequeno delay
+spawn(function()
+    wait(1)
+    for _, gui in pairs(game:GetService("CoreGui"):GetChildren()) do
+        if gui.Name == "KavoUI" then
+            gui.Enabled = true
+            gui.ResetOnSpawn = false
+            -- Ajusta o tamanho para mobile se necessário
+            if isMobile then
+                if gui:FindFirstChild("Main") then
+                    gui.Main.Size = UDim2.new(0, 300, 0, 400)
+                end
+            end
+        end
+    end
+end) 
